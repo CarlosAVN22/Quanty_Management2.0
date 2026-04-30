@@ -1,0 +1,137 @@
+.clientes-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.clientes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.clientes-title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.cliente-form {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+}
+
+.cliente-form-title {
+    margin-bottom: 15px;
+}
+
+.cliente-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.cliente-form-grid input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+}
+
+.cliente-form-grid input:focus {
+    border-color: #1a3f6f;
+}
+
+.cliente-form-checks {
+    margin-top: 12px;
+    display: flex;
+    gap: 20px;
+}
+
+.cliente-form-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 12px;
+}
+
+.btn-guardar {
+    padding: 10px 16px;
+    background: #1a3f6f;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-guardar:hover {
+    background: #2563a8;
+}
+
+.btn-cancelar {
+    padding: 10px 16px;
+    background: #6b7280;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-cancelar:hover {
+    background: #4b5563;
+}
+
+.clientes-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.clientes-table th,
+.clientes-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.clientes-table th {
+    background-color: #1a3f6f;
+    color: white;
+}
+
+.clientes-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+.acciones-cell {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-editar {
+    padding: 8px 12px;
+    background: #d97706;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-editar:hover {
+    background: #b45309;
+}
+
+.btn-eliminar {
+    padding: 8px 12px;
+    background: #b42318;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-eliminar:hover {
+    background: #912018;
+}
