@@ -39,14 +39,6 @@ function Productos() {
             setProductos(productosRes.data || []);
             setCategorias(referenciasRes.data?.categorias || []);
             setUnidades(referenciasRes.data?.unidades || []);
-
-            if (!modoEdicion) {
-                setFormulario((prev) => ({
-                    ...prev,
-                    categoria_id: prev.categoria_id || String(referenciasRes.data?.categorias?.[0]?.id || ""),
-                    unidad_medida_id: prev.unidad_medida_id || String(referenciasRes.data?.unidades?.[0]?.id || ""),
-                }));
-            }
         } catch (error) {
             console.error("Error al cargar productos:", error);
             setMensaje({ tipo: "error", texto: "No se pudieron cargar productos y referencias." });
@@ -58,11 +50,7 @@ function Productos() {
     }, []);
 
     const limpiarFormulario = () => {
-        setFormulario({
-            ...formularioInicial,
-            categoria_id: String(categorias[0]?.id || ""),
-            unidad_medida_id: String(unidades[0]?.id || ""),
-        });
+        setFormulario(formularioInicial);
         setModoEdicion(false);
         setProductoEditandoId(null);
     };
@@ -78,6 +66,17 @@ function Productos() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMensaje({ tipo: "", texto: "" });
+
+        // Validación estricta de Comboboxes
+        if (!formulario.categoria_id || formulario.categoria_id === "") {
+            setMensaje({ tipo: "error", texto: "Debes seleccionar una categoría válida." });
+            return;
+        }
+
+        if (!formulario.unidad_medida_id || formulario.unidad_medida_id === "") {
+            setMensaje({ tipo: "error", texto: "Debes seleccionar una unidad de medida válida." });
+            return;
+        }
 
         const payload = {
             ...formulario,
@@ -168,7 +167,7 @@ function Productos() {
                 <div>
                     <h2>Catálogo de productos</h2>
                     <p>
-                        Registra tus productos con precio de venta. Ese mismo precio será usado automáticamente en movimientos de inventario y kardex.
+                        Registra tus productos con precio de venta. Asegúrate de seleccionar correctamente las categorías y unidades.
                     </p>
                 </div>
                 <div className="hero-actions">
@@ -183,7 +182,7 @@ function Productos() {
                 <div className="panel-header">
                     <div>
                         <h3>{modoEdicion ? "Editar producto" : "Nuevo producto"}</h3>
-                        <p>Ya no se capturan costos de referencia ni costo promedio; solo el precio de venta.</p>
+                        <p>Completa todos los campos obligatorios para guardar en la base de datos.</p>
                     </div>
                 </div>
 
@@ -198,7 +197,6 @@ function Productos() {
                                 placeholder="Compatible con pistola / lector"
                                 required
                             />
-                            <small className="field-help">Puedes escribirlo o escanearlo con tu pistola si funciona como teclado.</small>
                         </div>
                         <div className="app-field full">
                             <label>Nombre</label>
@@ -211,7 +209,7 @@ function Productos() {
                         <div className="app-field">
                             <label>Categoría</label>
                             <select name="categoria_id" value={formulario.categoria_id} onChange={handleChange} required>
-                                <option value="">Seleccione una categoría</option>
+                                <option value="" disabled>-- Seleccione una categoría --</option>
                                 {categorias.map((categoria) => (
                                     <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
                                 ))}
@@ -220,7 +218,7 @@ function Productos() {
                         <div className="app-field">
                             <label>Unidad de medida</label>
                             <select name="unidad_medida_id" value={formulario.unidad_medida_id} onChange={handleChange} required>
-                                <option value="">Seleccione una unidad</option>
+                                <option value="" disabled>-- Seleccione una unidad --</option>
                                 {unidades.map((unidad) => (
                                     <option key={unidad.id} value={unidad.id}>{unidad.nombre} ({unidad.codigo})</option>
                                 ))}
@@ -317,12 +315,8 @@ function Productos() {
                                             </td>
                                             <td>
                                                 <div className="inline-actions">
-                                                    <button className="btn btn-small btn-outline" onClick={() => handleEditar(producto)}>
-                                                        Editar
-                                                    </button>
-                                                    <button className="btn btn-small btn-danger" onClick={() => handleEliminar(producto.id)}>
-                                                        Eliminar
-                                                    </button>
+                                                    <button className="btn btn-small btn-outline" onClick={() => handleEditar(producto)}>Editar</button>
+                                                    <button className="btn btn-small btn-danger" onClick={() => handleEliminar(producto.id)}>Eliminar</button>
                                                 </div>
                                             </td>
                                         </tr>

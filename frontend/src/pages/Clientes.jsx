@@ -3,7 +3,8 @@ import { obtenerClientes, crearCliente, actualizarCliente, eliminarCliente } fro
 import { canAccess } from "../utils/auth";
 
 const formularioInicial = {
-    nombre: "",
+    nombres: "",
+    apellidos: "",
     nombre_comercial: "",
     documento: "",
     nit: "",
@@ -49,16 +50,34 @@ function Clientes() {
         setClienteEditandoId(null);
     };
 
+    const validarSoloLetras = (texto) => {
+        if (!texto) return true;
+        // Permite letras, acentos, ñ y espacios. Bloquea números y símbolos.
+        return /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(texto);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!puedeCrear && !modoEdicion) return;
         if (!puedeEditar && modoEdicion) return;
         setMensaje({ tipo: "", texto: "" });
 
+        if (!validarSoloLetras(formulario.nombres) || !validarSoloLetras(formulario.apellidos)) {
+            setMensaje({ tipo: "error", texto: "Los nombres y apellidos solo pueden contener letras. No se permiten números ni símbolos." });
+            return;
+        }
+
         try {
+            // Combinamos nombres y apellidos temporalmente si el backend aún usa un solo campo 'nombre', 
+            // o lo enviamos separado si el backend ya fue actualizado.
+            const payload = {
+                ...formulario,
+                nombre: `${formulario.nombres} ${formulario.apellidos}`.trim()
+            };
+
             const respuesta = modoEdicion
-                ? await actualizarCliente(clienteEditandoId, formulario)
-                : await crearCliente(formulario);
+                ? await actualizarCliente(clienteEditandoId, payload)
+                : await crearCliente(payload);
 
             if (respuesta.ok) {
                 setMensaje({ tipo: "success", texto: modoEdicion ? "Cliente actualizado correctamente." : "Cliente creado correctamente." });
@@ -77,8 +96,15 @@ function Clientes() {
         if (!puedeEditar) return;
         setModoEdicion(true);
         setClienteEditandoId(cliente.id);
+        
+        // Lógica temporal para dividir si el backend aún envía un solo string
+        const partesNombre = (cliente.nombre || "").split(" ");
+        const nombresTemp = partesNombre.slice(0, Math.ceil(partesNombre.length / 2)).join(" ");
+        const apellidosTemp = partesNombre.slice(Math.ceil(partesNombre.length / 2)).join(" ");
+
         setFormulario({
-            nombre: cliente.nombre || "",
+            nombres: cliente.nombres || nombresTemp,
+            apellidos: cliente.apellidos || apellidosTemp,
             nombre_comercial: cliente.nombre_comercial || "",
             documento: cliente.documento || "",
             nit: cliente.nit || "",
@@ -113,7 +139,7 @@ function Clientes() {
         const filtro = busqueda.trim().toLowerCase();
         if (!filtro) return clientes;
         return clientes.filter((cliente) =>
-            [cliente.nombre, cliente.nombre_comercial, cliente.documento, cliente.nit, cliente.telefono, cliente.correo]
+            [cliente.id, cliente.nombre, cliente.nombre_comercial, cliente.documento, cliente.nit, cliente.telefono, cliente.correo]
                 .join(" ")
                 .toLowerCase()
                 .includes(filtro)
@@ -125,7 +151,7 @@ function Clientes() {
             <section className="hero-card">
                 <div>
                     <h2>Clientes</h2>
-                    <p>Todos los roles pueden consultar clientes, pero las acciones cambian según el rol que inició sesión.</p>
+                    <p>Busca clientes fácilmente por su ID, nombre o documento sin necesidad de memorizarlos.</p>
                 </div>
                 <div className="hero-actions"><div className="pill">{clientes.length} cliente(s)</div></div>
             </section>
@@ -137,19 +163,20 @@ function Clientes() {
                     <div className="panel-header">
                         <div>
                             <h3>{modoEdicion ? "Editar cliente" : "Nuevo cliente"}</h3>
-                            <p>Administrador y cajero pueden registrar clientes. Solo administrador puede editarlos o eliminarlos.</p>
+                            <p>Ingresa los datos. Nombres y apellidos no pueden contener números ni caracteres especiales.</p>
                         </div>
                     </div>
 
                     <form className="page-stack" onSubmit={handleSubmit}>
-                        <div className="form-grid three">
-                            <div className="app-field full"><label>Nombre</label><input name="nombre" value={formulario.nombre} onChange={handleChange} required /></div>
-                            <div className="app-field"><label>Nombre comercial</label><input name="nombre_comercial" value={formulario.nombre_comercial} onChange={handleChange} /></div>
-                            <div className="app-field"><label>Documento</label><input name="documento" value={formulario.documento} onChange={handleChange} /></div>
+                        <div className="form-grid two">
+                            <div className="app-field"><label>Nombres</label><input name="nombres" value={formulario.nombres} onChange={handleChange} required placeholder="Ej: Juan Carlos" /></div>
+                            <div className="app-field"><label>Apellidos</label><input name="apellidos" value={formulario.apellidos} onChange={handleChange} required placeholder="Ej: Pérez Gómez" /></div>
+                            <div className="app-field full"><label>Nombre comercial</label><input name="nombre_comercial" value={formulario.nombre_comercial} onChange={handleChange} placeholder="Empresa S.A. de C.V." /></div>
+                            <div className="app-field"><label>Documento (DUI/Pasaporte)</label><input name="documento" value={formulario.documento} onChange={handleChange} /></div>
                             <div className="app-field"><label>NIT</label><input name="nit" value={formulario.nit} onChange={handleChange} /></div>
                             <div className="app-field"><label>NRC</label><input name="nrc" value={formulario.nrc} onChange={handleChange} /></div>
                             <div className="app-field"><label>Teléfono</label><input name="telefono" value={formulario.telefono} onChange={handleChange} /></div>
-                            <div className="app-field"><label>Correo</label><input type="email" name="correo" value={formulario.correo} onChange={handleChange} /></div>
+                            <div className="app-field full"><label>Correo</label><input type="email" name="correo" value={formulario.correo} onChange={handleChange} /></div>
                         </div>
 
                         <div className="check-row"><label className="check-pill"><input type="checkbox" name="activo" checked={formulario.activo} onChange={handleChange} />Cliente activo</label></div>
@@ -166,8 +193,8 @@ function Clientes() {
 
             <section className="panel">
                 <div className="toolbar">
-                    <div><h3>Listado de clientes</h3><p className="muted">Busca por nombre, documento, NIT o correo.</p></div>
-                    <input className="search-input" placeholder="Buscar cliente" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+                    <div><h3>Listado de clientes</h3><p className="muted">Busca por ID, nombre, documento, NIT o correo.</p></div>
+                    <input className="search-input" placeholder="Buscar cliente..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
                 </div>
 
                 {clientesFiltrados.length === 0 ? (
@@ -179,7 +206,7 @@ function Clientes() {
                             <tbody>
                                 {clientesFiltrados.map((cliente) => (
                                     <tr key={cliente.id}>
-                                        <td>{cliente.id}</td>
+                                        <td><strong>#{cliente.id}</strong></td>
                                         <td><div className="table-title">{cliente.nombre}</div><div className="table-subtitle">{cliente.nombre_comercial || "Sin nombre comercial"}</div></td>
                                         <td><div>{cliente.documento || "-"}</div><div className="table-subtitle">NIT: {cliente.nit || "-"} · NRC: {cliente.nrc || "-"}</div></td>
                                         <td><div>{cliente.telefono || "-"}</div><div className="table-subtitle">{cliente.correo || "Sin correo"}</div></td>
